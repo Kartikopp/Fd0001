@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './lib/AuthContext';
+import Login from './pages/Login';
+import AdminDashboard from './pages/Admin';
+
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Hero } from './sections/Hero';
@@ -11,9 +16,10 @@ import { FeaturedArticles } from './sections/Featured';
 import { ToolsSection } from './sections/Tools';
 import { VideosSection, MonetizationCTA } from './sections/Media';
 import { AboutSection, ContactSection } from './sections/Communication';
+import { Newsletter } from './components/Newsletter';
 import { motion, useScroll, useSpring } from 'motion/react';
 
-export default function App() {
+function LandingPage() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -34,7 +40,6 @@ export default function App() {
       <main>
         <Hero />
         
-        {/* Trusted By Section (Implicitly requested asbadges in Trust Section) */}
         <section className="py-12 border-y border-neutral-900 bg-neutral-950/50">
           <div className="container mx-auto px-6">
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-20 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
@@ -60,11 +65,27 @@ export default function App() {
         <VideosSection />
         <AboutSection />
         <MonetizationCTA />
+        <Newsletter />
         <ContactSection />
       </main>
 
       <Footer />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

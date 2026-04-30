@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "Subscriber": {
+      "title": "Newsletter Subscriber",
+      "description": "Represents a user who signed up for the newsletter.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "ContactMessage": {
+      "title": "Contact Form Submission",
+      "description": "A message sent by a user via the contact form.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message", "createdAt"]
+    },
+    "Article": {
+      "title": "Blog Article",
+      "description": "A financial article published on the site.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "content": { "type": "string" },
+        "image": { "type": "string" },
+        "category": { "type": "string" },
+        "readTime": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "summary", "image", "category", "readTime", "createdAt"]
+    },
+    "Admin": {
+      "title": "Administrator",
+      "description": "A user with admin permissions.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "editor"] }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/subscribers/{subscriberId}": {
+      "schema": "Subscriber",
+      "description": "Collection of newsletter subscribers."
+    },
+    "/contacts/{contactId}": {
+      "schema": "ContactMessage",
+      "description": "Collection of contact form submissions."
+    },
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of published articles."
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Collection of system administrators."
+    }
+  }
+}

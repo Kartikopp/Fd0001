@@ -1,9 +1,12 @@
 import { motion } from 'motion/react';
-import { Menu, X, Coins } from 'lucide-react';
+import { Menu, X, Coins, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../utils';
+import { useAuth } from '../lib/AuthContext';
+import { Link } from 'react-router-dom';
 
 export function Navbar() {
+  const { isAdmin } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -53,6 +56,16 @@ export function Navbar() {
               {link.name}
             </a>
           ))}
+          
+          {isAdmin && (
+            <Link 
+              to="/admin" 
+              className="flex items-center gap-2 text-sm font-bold text-gold hover:text-white transition-colors"
+            >
+              <LayoutDashboard size={18} /> Admin
+            </Link>
+          )}
+
           <button className="bg-gold text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gold-hover transition-colors shadow-[0_0_15px_rgba(255,215,0,0.2)]">
             Start Learning
           </button>
@@ -84,6 +97,17 @@ export function Navbar() {
               {link.name}
             </a>
           ))}
+
+          {isAdmin && (
+            <Link 
+              to="/admin" 
+              className="text-lg font-bold text-gold flex items-center gap-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <LayoutDashboard size={20} /> Admin Dashboard
+            </Link>
+          )}
+
           <button className="bg-gold text-black w-full py-3 rounded-xl font-bold mt-2">
             Start Learning
           </button>

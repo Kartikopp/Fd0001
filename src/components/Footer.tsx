@@ -1,6 +1,29 @@
-import { Coins, Instagram, Twitter, Youtube, Mail, MapPin, Phone } from 'lucide-react';
+import { Coins, Instagram, Twitter, Youtube, CheckCircle, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { db, OperationType, handleFirestoreError } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleSubscribe = async () => {
+    if (!email) return;
+    setStatus('loading');
+    try {
+      await addDoc(collection(db, 'subscribers'), {
+        email,
+        createdAt: serverTimestamp(),
+      });
+      setStatus('success');
+      setEmail('');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'subscribers');
+      setStatus('idle');
+    }
+  };
+
   return (
     <footer className="bg-neutral-950 border-t border-neutral-900 pt-20 pb-10">
       <div className="container mx-auto px-6">
@@ -34,7 +57,7 @@ export function Footer() {
             <h4 className="font-display font-bold mb-6">Quick Links</h4>
             <ul className="space-y-4 text-sm text-neutral-400">
               <li><a href="#home" className="hover:text-gold transition-colors">Home</a></li>
-              <li><a href="#blog" className="hover:text-gold transition-colors">Blog Articles</a></li>
+              <li><Link to="/login" className="hover:text-gold transition-colors">Admin Login</Link></li>
               <li><a href="#tools" className="hover:text-gold transition-colors">Finance Tools</a></li>
               <li><a href="#contact" className="hover:text-gold transition-colors">Contact Us</a></li>
             </ul>
@@ -51,21 +74,33 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-bold mb-6">Contact Info</h4>
-            <ul className="space-y-4 text-sm text-neutral-400">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-gold shrink-0" />
-                <span>Mumbai, Maharashtra, India</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-gold shrink-0" />
-                <span>+91 98765 43210</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="text-gold shrink-0" />
-                <span>contact@financedastak.com</span>
-              </li>
-            </ul>
+            <h4 className="font-display font-bold mb-6">Stay Updated</h4>
+            <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
+              Join our weekly newsletter for the latest market insights.
+            </p>
+            {status === 'success' ? (
+              <div className="flex items-center gap-2 text-gold font-bold text-sm bg-gold/10 p-4 rounded-xl border border-gold/20">
+                <CheckCircle size={16} /> Subscribed!
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email address" 
+                  className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:border-gold outline-none"
+                />
+                <button 
+                  onClick={handleSubscribe}
+                  disabled={status === 'loading'}
+                  className="bg-gold text-black py-3 rounded-xl font-bold text-sm hover:bg-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

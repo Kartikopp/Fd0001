@@ -1,7 +1,11 @@
-import { Mail, Send, Linkedin, Instagram, Twitter } from 'lucide-react';
+import { Mail, Send, Linkedin, Instagram, Twitter, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
+import { db, OperationType, handleFirestoreError } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export function AboutSection() {
+// ... existing AboutSection component
   return (
     <section id="about" className="py-24 bg-neutral-950">
       <div className="container mx-auto px-6">
@@ -72,6 +76,28 @@ export function AboutSection() {
 }
 
 export function ContactSection() {
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) return;
+    setStatus('loading');
+    
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        ...formData,
+        createdAt: serverTimestamp(),
+      });
+      setStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error("Submission failed:", error);
+      setStatus('idle');
+      handleFirestoreError(error, OperationType.CREATE, 'contacts');
+    }
+  };
+
   return (
     <section id="contact" className="py-24 relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
@@ -116,38 +142,70 @@ export function ContactSection() {
           </div>
           
           <div className="flex-1">
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
-              <div className="flex flex-col gap-3">
-                <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Full Name</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Rahul Sharma"
-                  className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-3">
-                <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Email Address</label>
-                <input 
-                  type="email" 
-                  placeholder="name@example.com"
-                  className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-3 md:col-span-2">
-                <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Your Message</label>
-                <textarea 
-                  rows={5}
-                  placeholder="How can we help you?"
-                  className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors resize-none"
-                ></textarea>
-              </div>
-              <div className="md:col-span-2">
-                <button className="bg-gold text-black w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gold-hover transition-all shadow-xl">
-                  Send Message
-                  <Send size={18} />
+            {status === 'success' ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="h-full flex flex-col items-center justify-center text-center p-12 bg-neutral-950 border border-neutral-800 rounded-[32px]"
+              >
+                <div className="w-20 h-20 bg-gold/10 text-gold rounded-full flex items-center justify-center mb-6">
+                  <CheckCircle size={40} />
+                </div>
+                <h4 className="text-2xl font-display font-bold mb-4 text-white">Message Sent!</h4>
+                <p className="text-neutral-400 mb-8">Hum jald hi aap se sampark karenge.</p>
+                <button 
+                  onClick={() => setStatus('idle')}
+                  className="text-gold font-bold hover:underline"
+                >
+                  Send another message
                 </button>
-              </div>
-            </form>
+              </motion.div>
+            ) : (
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
+                <div className="flex flex-col gap-3">
+                  <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Full Name</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Email Address</label>
+                  <input 
+                    type="email" 
+                    required
+                    placeholder="name@example.com"
+                    className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+                <div className="flex flex-col gap-3 md:col-span-2">
+                  <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Your Message</label>
+                  <textarea 
+                    required
+                    rows={5}
+                    placeholder="How can we help you?"
+                    className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-white focus:border-gold outline-none transition-colors resize-none"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  ></textarea>
+                </div>
+                <div className="md:col-span-2">
+                  <button 
+                    disabled={status === 'loading'}
+                    className="bg-gold text-black w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gold-hover transition-all shadow-xl disabled:opacity-50"
+                  >
+                    {status === 'loading' ? 'Sending...' : 'Send Message'}
+                    <Send size={18} />
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
